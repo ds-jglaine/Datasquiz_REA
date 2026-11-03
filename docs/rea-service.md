@@ -11,7 +11,7 @@ readiness before the node is admitted.
 | ---------------------- | -------------------------------------------------------------- |
 | Package                | `rea-agents`                                                   |
 | Version                | `6.8.0`                                                        |
-| Service release commit | `3aead6e91abe181e8df1ecb5da368031c50654f5`                     |
+| Service release commit | `f84e6346ac2c58748d5608aca0d9f067df9c8f3c`                     |
 | Upstream base commit   | `c3647ade1e557c4179a8b825a37e0c2193cd2526`                     |
 | Authority checkout     | `/mnt/ai/source/Datasquiz_REA` on `gpu2.datasquiz.net`         |
 | Repository             | `ds-jglaine/Datasquiz_REA`                                     |
