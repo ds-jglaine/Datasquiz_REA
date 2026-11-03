@@ -1,0 +1,42 @@
+{
+  "service": "rea",
+  "displayName": "REA standalone service",
+  "runtimeRoot": "/mnt/rea",
+  "execution": {
+    "user": "ds-operator",
+    "privileged": false,
+    "root": false
+  },
+  "network": {
+    "host": "127.0.0.1",
+    "port": 4380,
+    "publicHost": "rea.datasquiz.com"
+  },
+  "readiness": {
+    "path": "/health",
+    "splashPath": "/"
+  },
+  "mcp": {
+    "transport": "stdio",
+    "http": false
+  },
+  "release": {
+    "repository": "ds-jglaine/Datasquiz_REA",
+    "commit": "c3647ade1e557c4179a8b825a37e0c2193cd2526",
+    "version": "6.8.0"
+  },
+  "layout": {
+    "releases": "/mnt/rea/releases",
+    "current": "/mnt/rea/current",
+    "environment": "/mnt/rea/env/rea-service.env",
+    "state": "/mnt/rea/state",
+    "logs": "/mnt/rea/logs"
+  },
+  "scripts": [
+    "scripts/0-complete-cleanup.sh",
+    "scripts/1-setup-system.sh",
+    "scripts/2-deploy-services.sh",
+    "scripts/3-configure-services.sh",
+    "scripts/4-run-tests.sh"
+  ]
+}

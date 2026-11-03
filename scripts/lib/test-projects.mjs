@@ -84,6 +84,14 @@ export const BUILT_TEST_PROJECTS = [
     group: "built",
     include: ["tests/process-global/**/*.test.ts"],
   },
+  {
+    name: "service",
+    group: "built",
+    // The standalone service suite drives server.js and the Script 0-4 set as
+    // real subprocesses on ephemeral loopback ports, so each file owns its own
+    // process and no other project claims tests/service/**.
+    include: ["tests/service/**/*.test.ts"],
+  },
 ];
 
 const ALL_TEST_PROJECTS = [...SOURCE_TEST_PROJECTS, ...BUILT_TEST_PROJECTS];

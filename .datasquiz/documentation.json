@@ -1,0 +1,8 @@
+{
+  "service": "rea",
+  "devPage": "/architecture/rea-service/",
+  "revision": "rea-service-scaffold-01-v1",
+  "documents": ["docs/rea-service.md"],
+  "repository": "ds-jglaine/Datasquiz_REA",
+  "commit": "c3647ade1e557c4179a8b825a37e0c2193cd2526"
+}
