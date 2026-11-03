@@ -1,16 +1,17 @@
 {
   "service": "rea",
   "displayName": "REA standalone service",
-  "runtimeRoot": "/mnt/rea",
+  "runtimeRoot": "/mnt/ai/rea",
   "execution": {
     "user": "ds-operator",
     "privileged": false,
-    "root": false
+    "root": false,
+    "container": true
   },
   "network": {
     "host": "127.0.0.1",
     "port": 4380,
-    "publicHost": "rea.datasquiz.com"
+    "publicHost": "rea.ai.datasquiz.net"
   },
   "readiness": {
     "path": "/health",
@@ -22,16 +23,20 @@
   },
   "release": {
     "repository": "ds-jglaine/Datasquiz_REA",
-    "commit": "b9d20a3b678881089a8adf6c75ff2dfb0695a6f7",
+    "commit": "f84e6346ac2c58748d5608aca0d9f067df9c8f3c",
     "upstreamCommit": "c3647ade1e557c4179a8b825a37e0c2193cd2526",
     "version": "6.8.0"
   },
+  "testRuntime": {
+    "image": "node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+    "node": "22.23.4"
+  },
   "layout": {
-    "releases": "/mnt/rea/releases",
-    "current": "/mnt/rea/current",
-    "environment": "/mnt/rea/env/rea-service.env",
-    "state": "/mnt/rea/state",
-    "logs": "/mnt/rea/logs"
+    "releases": "/mnt/ai/rea/releases",
+    "current": "/mnt/ai/rea/current",
+    "environment": "/mnt/ai/rea/env/rea-service.env",
+    "state": "/mnt/ai/rea/state",
+    "logs": "/mnt/ai/rea/logs"
   },
   "scripts": [
     "scripts/0-complete-cleanup.sh",

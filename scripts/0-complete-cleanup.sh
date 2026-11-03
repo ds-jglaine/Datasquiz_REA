@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Script 0 - complete cleanup of the REA standalone service runtime tree.
-# Wipes only the declared service runtime directories under /mnt/rea.
-# Refuses to run as root and refuses any target outside /mnt/rea.
+# Wipes only the declared service runtime directories under /mnt/ai/rea.
+# Refuses to run as root and refuses any target outside /mnt/ai/rea.
 # Always inspect the plan with --dry-run first.
 set -euo pipefail
 
@@ -23,12 +23,12 @@ if [ "$(id -u)" -eq 0 ]; then
   exit 1
 fi
 
-REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/rea}"
+REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/ai/rea}"
 case "$REA_RUNTIME_ROOT" in
-  /mnt/rea | /mnt/rea/)
+  /mnt/ai/rea | /mnt/ai/rea/)
     ;;
   *)
-    printf 'rea service: refusing runtime root outside /mnt/rea: %s\n' \
+    printf 'rea service: refusing runtime root outside /mnt/ai/rea: %s\n' \
       "$REA_RUNTIME_ROOT" >&2
     exit 1
     ;;
@@ -44,10 +44,10 @@ TARGETS=(
 
 for target in "${TARGETS[@]}"; do
   case "$target" in
-    /mnt/rea/*)
+    /mnt/ai/rea/*)
       ;;
     *)
-      printf 'rea service: refusing target outside /mnt/rea: %s\n' "$target" >&2
+      printf 'rea service: refusing target outside /mnt/ai/rea: %s\n' "$target" >&2
       exit 1
       ;;
   esac

@@ -31,12 +31,12 @@ if ! printf '%s' "$REA_PIN" | grep -Eq '^[0-9a-f]{40}$'; then
   exit 1
 fi
 
-REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/rea}"
+REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/ai/rea}"
 case "$REA_RUNTIME_ROOT" in
-  /mnt/rea | /mnt/rea/)
+  /mnt/ai/rea | /mnt/ai/rea/)
     ;;
   *)
-    printf 'rea service: refusing runtime root outside /mnt/rea: %s\n' \
+    printf 'rea service: refusing runtime root outside /mnt/ai/rea: %s\n' \
       "$REA_RUNTIME_ROOT" >&2
     exit 1
     ;;

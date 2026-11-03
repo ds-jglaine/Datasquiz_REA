@@ -1,8 +1,11 @@
 {
+  "schemaVersion": "ds-public-docs/v1",
+  "publicDocs": ["docs/rea-service.md"],
+  "privateDocs": {},
   "service": "rea",
-  "devPage": "/architecture/rea-service/",
-  "revision": "rea-service-scaffold-01-v1",
+  "devPage": "/platform/rea-service/",
+  "revision": "rea-service-scaffold-01-v2",
   "documents": ["docs/rea-service.md"],
   "repository": "ds-jglaine/Datasquiz_REA",
-  "commit": "b9d20a3b678881089a8adf6c75ff2dfb0695a6f7"
+  "commit": "f84e6346ac2c58748d5608aca0d9f067df9c8f3c"
 }

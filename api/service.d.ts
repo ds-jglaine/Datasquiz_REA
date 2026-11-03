@@ -30,7 +30,7 @@ export type ServiceEnvironment = Record<string, string | undefined>;
 export declare const SERVICE_NAME: "rea";
 export declare const DEFAULT_PORT: 4380;
 export declare const DEFAULT_HOST: "127.0.0.1";
-export declare const DEFAULT_RUNTIME_ROOT: "/mnt/rea";
+export declare const DEFAULT_RUNTIME_ROOT: "/mnt/ai/rea";
 export declare const SERVICE_ROUTES: readonly ["/health", "/"];
 
 export declare class ServiceConfigError extends Error {}
