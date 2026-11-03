@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Script 1 - create the user-owned REA runtime tree under /mnt/rea.
+# Script 1 - create the user-owned REA runtime tree under /mnt/ai/rea.
 # Never runs as root, uses no privileged wrapper, and creates only paths inside
 # the runtime root the service declares.
 set -euo pipefail
@@ -9,12 +9,12 @@ if [ "$(id -u)" -eq 0 ]; then
   exit 1
 fi
 
-REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/rea}"
+REA_RUNTIME_ROOT="${REA_RUNTIME_ROOT:-/mnt/ai/rea}"
 case "$REA_RUNTIME_ROOT" in
-  /mnt/rea | /mnt/rea/)
+  /mnt/ai/rea | /mnt/ai/rea/)
     ;;
   *)
-    printf 'rea service: refusing runtime root outside /mnt/rea: %s\n' \
+    printf 'rea service: refusing runtime root outside /mnt/ai/rea: %s\n' \
       "$REA_RUNTIME_ROOT" >&2
     exit 1
     ;;

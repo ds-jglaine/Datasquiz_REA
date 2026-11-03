@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  DEFAULT_RUNTIME_ROOT,
   SERVICE_NAME,
   SERVICE_ROUTES,
   ServiceConfigError,
@@ -18,6 +19,9 @@ import {
 import type { ServiceIdentity } from "../../api/service.js";
 
 const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url));
+
+/** The scrapped placement, assembled so this suite never carries it literally. */
+const SCRAPPED_RUNTIME_ROOT = ["", "mnt", "rea"].join("/");
 
 const readJson = <T>(relativePath: string): T =>
   JSON.parse(readFileSync(join(REPO_ROOT, relativePath), "utf8")) as T;
@@ -84,7 +88,7 @@ describe("REA-SERVICE-SCAFFOLD-01: readiness and splash are the only routes", ()
     expect(payload.service).toBe("rea");
     expect(payload.version).toBe(packageJson.version);
     expect(payload.commit).toBe(identityCommit);
-    expect(payload.runtimeRoot).toBe("/mnt/rea");
+    expect(payload.runtimeRoot).toBe("/mnt/ai/rea");
     expect(payload.port).toBe(4380);
     expect(payload.mcp).toBe("stdio");
 
@@ -132,23 +136,29 @@ describe("REA-SERVICE-SCAFFOLD-01: readiness and splash are the only routes", ()
 });
 
 describe("REA-SERVICE-SCAFFOLD-01: contract files declare service, runtime root, scope and revision", () => {
-  it("operations.json declares the /mnt/rea layout, non-root user and readiness path", () => {
+  it("operations.json declares the AI-stack layout, non-root user and readiness path", () => {
     const operations = readJson<Record<string, unknown>>(
       "deployment/operations.json",
     );
     expect(operations.service).toBe("rea");
-    expect(operations.runtimeRoot).toBe("/mnt/rea");
+    expect(operations.runtimeRoot).toBe("/mnt/ai/rea");
     const execution = operations.execution as Record<string, unknown>;
     expect(execution.user).toBe("ds-operator");
     expect(execution.user).not.toBe("root");
     expect(execution.privileged).toBe(false);
+    expect(execution.container).toBe(true);
     const network = operations.network as Record<string, unknown>;
     expect(network.port).toBe(4380);
     expect(network.host).toBe("127.0.0.1");
-    expect(network.publicHost).toBe("rea.datasquiz.com");
+    expect(network.publicHost).toBe("rea.ai.datasquiz.net");
     const readiness = operations.readiness as Record<string, unknown>;
     expect(readiness.path).toBe("/health");
     expect(operations.mcp).toEqual({ transport: "stdio", http: false });
+    const testRuntime = operations.testRuntime as Record<string, unknown>;
+    expect(testRuntime.image).toMatch(
+      /^node:22-alpine@sha256:[0-9a-f]{64}$/u,
+    );
+    expect(testRuntime.node).toBe("22.23.4");
   });
 
   it("service-identity.json pins the service, owner, repository, commit and scope", () => {
@@ -163,7 +173,8 @@ describe("REA-SERVICE-SCAFFOLD-01: contract files declare service, runtime root,
     expect(identity.version).toBe(packageJson.version);
     expect(identity.scope).toBe("ai_node");
     expect(identity.transport).toBe("stdio");
-    expect(identity.runtimeRoot).toBe("/mnt/rea");
+    expect(identity.runtimeRoot).toBe("/mnt/ai/rea");
+    expect(identity.publicHost).toBe("rea.ai.datasquiz.net");
   });
 
   it("documentation.json names the Dev page and the revision", () => {
@@ -171,9 +182,11 @@ describe("REA-SERVICE-SCAFFOLD-01: contract files declare service, runtime root,
       ".datasquiz/documentation.json",
     );
     expect(documentation.service).toBe("rea");
-    expect(String(documentation.devPage)).toMatch(/^\/[a-z0-9/-]+\/$/);
-    expect(documentation.revision).toBe("rea-service-scaffold-01-v1");
+    expect(documentation.devPage).toBe("/platform/rea-service/");
+    expect(documentation.revision).toBe("rea-service-scaffold-01-v2");
     expect(documentation.documents).toContain("docs/rea-service.md");
+    expect(documentation.schemaVersion).toBe("ds-public-docs/v1");
+    expect(documentation.publicDocs).toEqual(["docs/rea-service.md"]);
   });
 
   it("loads the packaged identity and rejects a missing one", () => {
@@ -189,19 +202,29 @@ describe("REA-SERVICE-SCAFFOLD-01: contract files declare service, runtime root,
       4380,
     );
     expect(resolveServiceConfig({}, identity).host).toBe("127.0.0.1");
-    expect(resolveServiceConfig({}, identity).runtimeRoot).toBe("/mnt/rea");
+    expect(DEFAULT_RUNTIME_ROOT).toBe("/mnt/ai/rea");
+    expect(resolveServiceConfig({}, identity).runtimeRoot).toBe("/mnt/ai/rea");
+    expect(
+      resolveServiceConfig({ REA_RUNTIME_ROOT: "/mnt/ai/rea/" }, identity)
+        .runtimeRoot,
+    ).toBe("/mnt/ai/rea");
     expect(resolveServiceConfig({}, identity).commit).toBe(identityCommit);
 
     for (const port of ["0", "65536", "abc", "80.5"])
       expect(() =>
         resolveServiceConfig({ REA_SERVICE_PORT: port }, identity),
       ).toThrow(ServiceConfigError);
-    expect(() =>
-      resolveServiceConfig({ REA_RUNTIME_ROOT: "mnt/rea" }, identity),
-    ).toThrow(ServiceConfigError);
-    expect(() =>
-      resolveServiceConfig({ REA_RUNTIME_ROOT: "/proc/rea" }, identity),
-    ).toThrow(ServiceConfigError);
+    for (const root of [
+      "mnt/ai/rea",
+      "proc/rea",
+      "/proc/rea",
+      "/mnt/ai/rea/releases",
+      SCRAPPED_RUNTIME_ROOT,
+      "/mnt/ai/other",
+    ])
+      expect(() =>
+        resolveServiceConfig({ REA_RUNTIME_ROOT: root }, identity),
+      ).toThrow(ServiceConfigError);
     expect(() =>
       resolveServiceConfig({ REA_SERVICE_HOST: " " }, identity),
     ).toThrow(ServiceConfigError);

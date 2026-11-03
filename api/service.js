@@ -1,4 +1,4 @@
-import { accessSync, constants, readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { isAbsolute, join, resolve } from "node:path";
 
@@ -11,8 +11,8 @@ export const DEFAULT_PORT = 4380;
 /** Default bind address: loopback only. */
 export const DEFAULT_HOST = "127.0.0.1";
 
-/** Default durable runtime root for the service. */
-export const DEFAULT_RUNTIME_ROOT = "/mnt/rea";
+/** Default and only accepted durable runtime root for the service. */
+export const DEFAULT_RUNTIME_ROOT = "/mnt/ai/rea";
 
 /**
  * The complete service route inventory. Readiness and the pre-admission splash
@@ -205,8 +205,9 @@ const parseHost = (value) => {
 };
 
 /**
- * The runtime root must be absolute, and outside /mnt it must already be a
- * writable directory owned by the invoking user.
+ * The runtime root must be absolute and exactly the AI-stack runtime root.
+ * There is one runtime root: any other value, including a subdirectory or the
+ * scrapped placement, is refused so the service cannot claim a second tree.
  *
  * @param {string | undefined} value
  * @returns {string}
@@ -217,16 +218,10 @@ const parseRuntimeRoot = (value) => {
   if (!isAbsolute(raw))
     throw new ServiceConfigError("REA_RUNTIME_ROOT must be an absolute path");
   const resolved = resolve(raw);
-  if (resolved === "/mnt" || resolved.startsWith("/mnt/")) return resolved;
-  try {
-    if (!statSync(resolved).isDirectory())
-      throw new Error("not a directory");
-    accessSync(resolved, constants.W_OK);
-  } catch {
+  if (resolved !== DEFAULT_RUNTIME_ROOT)
     throw new ServiceConfigError(
-      `REA_RUNTIME_ROOT ${resolved} is outside /mnt and is not a writable directory`,
+      `REA_RUNTIME_ROOT must be ${DEFAULT_RUNTIME_ROOT}`,
     );
-  }
   return resolved;
 };
 
