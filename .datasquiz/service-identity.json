@@ -1,0 +1,13 @@
+{
+  "service": "rea",
+  "displayName": "REA standalone service",
+  "owner": "Datasquiz",
+  "repository": "ds-jglaine/Datasquiz_REA",
+  "upstream": "morluto/rea",
+  "version": "6.8.0",
+  "commit": "c3647ade1e557c4179a8b825a37e0c2193cd2526",
+  "scope": "ai_node",
+  "transport": "stdio",
+  "runtimeRoot": "/mnt/rea",
+  "publicHost": "rea.datasquiz.com"
+}
