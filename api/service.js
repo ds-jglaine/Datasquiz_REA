@@ -67,6 +67,7 @@ const readPackage = () => {
  *   owner: string,
  *   repository: string,
  *   commit: string,
+ *   upstreamCommit: string,
  *   version: string,
  *   scope: string,
  *   transport: string,
@@ -113,12 +114,50 @@ export function loadServiceIdentity(rootDir) {
     owner: parsed.owner,
     repository: parsed.repository,
     commit: parsed.commit,
+    upstreamCommit:
+      typeof parsed.upstreamCommit === "string" ? parsed.upstreamCommit : "",
     version: parsed.version,
     scope: parsed.scope,
     transport: typeof parsed.transport === "string" ? parsed.transport : "stdio",
     runtimeRoot: parsed.runtimeRoot,
     upstream: typeof parsed.upstream === "string" ? parsed.upstream : "",
   };
+}
+
+/**
+ * Read the one exact deploy pin: the service release commit recorded in
+ * `.datasquiz/service-identity.json`. Deployment scripts 2 and 3 read the pin
+ * from here instead of carrying their own copy, so the deployed commit and the
+ * environment they write cannot drift apart.
+ *
+ * @param {string} rootDir repository root that holds .datasquiz/
+ * @returns {string}
+ */
+export function readReleasePin(rootDir) {
+  return loadServiceIdentity(rootDir).commit;
+}
+
+/**
+ * Record the commit a deploy checked out in the packaged identity, so the
+ * identity shipped inside the release, the checked-in identity and the
+ * environment script 3 writes all name the same service release commit. The
+ * readiness pin check then only reports `release_pin_mismatch` for real drift.
+ *
+ * @template {{ commit: string }} T
+ * @param {T} identity packaged identity document
+ * @param {string} commit the commit the deploy verified with rev-parse
+ * @returns {T}
+ */
+export function stampServiceIdentity(identity, commit) {
+  if (!PIN_PATTERN.test(String(commit))) {
+    throw new ServiceConfigError(
+      "a released service identity must pin a full 40 character commit",
+    );
+  }
+  if (identity === null || typeof identity !== "object") {
+    throw new ServiceConfigError("a service identity must be a JSON object");
+  }
+  return { ...identity, commit };
 }
 
 /**

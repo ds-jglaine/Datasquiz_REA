@@ -7,22 +7,29 @@ readiness before the node is admitted.
 
 ## Pinned release
 
-| Item           | Value                                      |
-| -------------- | ------------------------------------------ |
-| Package        | `rea-agents`                               |
-| Version        | `6.8.0`                                    |
-| Commit         | `c3647ade1e557c4179a8b825a37e0c2193cd2526` |
-| Repository     | `ds-jglaine/Datasquiz_REA`                 |
-| Upstream       | `morluto/rea`                              |
-| Node floor     | `>=22.23.4`                                |
-| Runtime root   | `/mnt/rea`                                 |
-| Listen address | `127.0.0.1:4380` (loopback only)           |
-| Readiness      | `GET /health`                              |
-| Splash         | `GET /`                                    |
+| Item                  | Value                                      |
+| --------------------- | ------------------------------------------ |
+| Package               | `rea-agents`                               |
+| Version               | `6.8.0`                                    |
+| Service release commit | `b9d20a3b678881089a8adf6c75ff2dfb0695a6f7` |
+| Upstream base commit  | `c3647ade1e557c4179a8b825a37e0c2193cd2526` |
+| Repository            | `ds-jglaine/Datasquiz_REA`                 |
+| Upstream              | `morluto/rea`                              |
+| Node floor            | `>=22.23.4`                                |
+| Runtime root          | `/mnt/rea`                                 |
+| Listen address        | `127.0.0.1:4380` (loopback only)           |
+| Readiness             | `GET /health`                              |
+| Splash                | `GET /`                                    |
 
-The pin is a full 40 character commit in `scripts/2-deploy-services.sh`,
-`.datasquiz/service-identity.json`, `.datasquiz/documentation.json` and
-`deployment/operations.json`. No tag or branch is used anywhere.
+The pin is one full 40 character service release commit, recorded once in
+`.datasquiz/service-identity.json` (`commit`) and mirrored in
+`.datasquiz/documentation.json`, `deployment/operations.json` and this page.
+Scripts 2 and 3 do not carry their own copy: both read the recorded commit
+through `readReleasePin` in `api/service.js`, so the checkout and the
+environment they write cannot drift apart. The upstream base commit
+`c3647ade1e557c4179a8b825a37e0c2193cd2526` predates the scaffold (its tree has
+no `server.js` and no `tests/service`) and is recorded only as the base the fork
+was built on. No tag or branch is used anywhere.
 
 ## Surface
 
@@ -63,8 +70,8 @@ Run in order, as the non-root tenant user, from the repository checkout:
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/0-complete-cleanup.sh`   | Wipes the service runtime directories. Inspect with `--dry-run` first; it removes nothing and exits 0. Refuses any target outside `/mnt/rea`.                         |
 | `scripts/1-setup-system.sh`       | Creates the user-owned tree `/mnt/rea/{releases,current,env,state,logs}` with mode 750.                                                                               |
-| `scripts/2-deploy-services.sh`    | Clones or updates `/mnt/rea/releases/<commit>`, checks out the pinned commit detached, verifies `rev-parse HEAD` equals the pin, and points `/mnt/rea/current` at it. |
-| `scripts/3-configure-services.sh` | Writes `/mnt/rea/env/rea-service.env` (mode 600) with the loopback host, port, runtime root, pinned commit and stdio MCP transport.                                   |
+| `scripts/2-deploy-services.sh`    | Reads the recorded pin, clones or updates `/mnt/rea/releases/<commit>`, checks out the pinned commit detached, verifies `rev-parse HEAD` equals the pin, refuses a release without `server.js`, `tests/service` and the packaged identity, records the deployed commit in that release identity, and points `/mnt/rea/current` at it. |
+| `scripts/3-configure-services.sh` | Refuses a deployed release whose identity records a different commit, then writes `/mnt/rea/env/rea-service.env` (mode 600) with the loopback host, port, runtime root, the same recorded commit and the stdio MCP transport.    |
 | `scripts/4-run-tests.sh`          | Verifies the Node floor, then runs `npm run test:service` in the deployed release.                                                                                    |
 
 Every script passes `bash -n`, refuses to run as root, and writes only inside
@@ -95,16 +102,34 @@ full project graph. The five acceptance criteria map to the tests as follows:
 | Scripts 0-4 are non-root and script 0 is wipe-safe in dry-run    | `tests/service/rea-service-scripts.test.ts`  |
 | No HTTP MCP listener is created                                  | `tests/service/rea-service-scaffold.test.ts` |
 | The runtime pin is exact and reversible                          | `tests/service/rea-service-scaffold.test.ts` |
+| The deploy pin contains the scaffold and the release commit reads back | `tests/service/rea-service-scripts.test.ts` |
+
+## Release commit readback
+
+The pin must name a commit whose tree actually carries the service: `server.js`,
+`tests/service` and `.datasquiz/service-identity.json`. Script 2 checks those
+three paths after the detached checkout and exits non-zero instead of reporting
+success for a release it cannot run.
+
+That commit was authored before the identity could name it, so script 2 then
+records the deployed commit in the release copy of
+`.datasquiz/service-identity.json` (the stamp). The identity shipped inside
+`/mnt/rea/releases/<commit>`, the identity checked into the repository and the
+`REA_RELEASE_COMMIT` script 3 writes therefore name the same commit, and
+`/health` answers `ok: true` with no `release_pin_mismatch`. The readiness check
+still reports `release_pin_mismatch` when the environment names any other
+commit, so real drift is still visible. Script 3 refuses to write an environment
+for a release whose identity records a different commit; run script 2 first.
 
 ## Update procedure (upstream sync)
 
 1. Fetch the upstream release in a checkout of the fork and merge it on `main`:
    `git fetch upstream --tags`, `git merge <upstream-commit>`.
 2. Run the packaged tests and the service suite and confirm both are green.
-3. Record the new commit in all four pin locations: `.datasquiz/service-identity.json`,
-   `.datasquiz/documentation.json`, `deployment/operations.json` and the
-   `REA_PIN` constant in `scripts/2-deploy-services.sh` and
-   `scripts/3-configure-services.sh`.
+3. Record the new service release commit once, in `commit` of
+   `.datasquiz/service-identity.json`; mirror it in `release.commit` of
+   `deployment/operations.json`, in `.datasquiz/documentation.json` and in this
+   page, and keep the upstream base commit beside it.
 4. Bump `version` in `package.json` only through the upstream release, never by
    hand.
 5. Deploy with script 2, reconfigure with script 3, run script 4, then verify
@@ -116,12 +141,12 @@ full project graph. The five acceptance criteria map to the tests as follows:
 
 1. Read the previous pin from `git log` of the contract files, or from the
    release directory still present under `/mnt/rea/releases`.
-2. Set `REA_PIN` in `scripts/2-deploy-services.sh` and
-   `scripts/3-configure-services.sh` back to that 40 character commit, and
-   restore the same commit in the two `.datasquiz` files plus
-   `deployment/operations.json`.
-3. Run script 2 (it checks out the older release and repoints
-   `/mnt/rea/current`), then script 3, then script 4.
+2. Set `commit` in `.datasquiz/service-identity.json` back to that 40 character
+   commit and mirror it in `deployment/operations.json`,
+   `.datasquiz/documentation.json` and this page. Both scripts read the identity
+   file, so no script constant is left behind.
+3. Run script 2 (it checks out the older release, verifies its scaffold and
+   stamps its identity), then script 3, then script 4.
 4. Confirm `/health` reports the restored commit and version. If a release
    directory is corrupt, run script 0 with `--dry-run`, then without, and
    redeploy.

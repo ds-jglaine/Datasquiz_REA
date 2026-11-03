@@ -5,6 +5,7 @@ export type ServiceIdentity = {
   owner: string;
   repository: string;
   commit: string;
+  upstreamCommit: string;
   version: string;
   scope: string;
   transport: string;
@@ -35,6 +36,13 @@ export declare const SERVICE_ROUTES: readonly ["/health", "/"];
 export declare class ServiceConfigError extends Error {}
 
 export declare function loadServiceIdentity(rootDir: string): ServiceIdentity;
+
+export declare function readReleasePin(rootDir: string): string;
+
+export declare function stampServiceIdentity<T extends { commit: string }>(
+  identity: T,
+  commit: string,
+): T;
 
 export declare function resolveServiceConfig(
   env?: ServiceEnvironment,

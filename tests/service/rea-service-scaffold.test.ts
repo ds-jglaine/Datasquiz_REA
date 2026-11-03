@@ -157,7 +157,9 @@ describe("REA-SERVICE-SCAFFOLD-01: contract files declare service, runtime root,
     expect(String(identity.owner).length).toBeGreaterThan(0);
     expect(identity.repository).toBe("ds-jglaine/Datasquiz_REA");
     expect(identityCommit).toMatch(/^[0-9a-f]{40}$/);
-    expect(identity.commit).toBe("c3647ade1e557c4179a8b825a37e0c2193cd2526");
+    expect(identity.upstreamCommit).toBe(
+      "c3647ade1e557c4179a8b825a37e0c2193cd2526",
+    );
     expect(identity.version).toBe(packageJson.version);
     expect(identity.scope).toBe("ai_node");
     expect(identity.transport).toBe("stdio");
@@ -296,15 +298,14 @@ describe("REA-SERVICE-SCAFFOLD-01: the runtime pin is exact and reversible", () 
     expect(docs).toMatch(/upstream syn/iu);
   });
 
-  it("pins an exact commit in every deployment script", () => {
-    const deploy = readSource("scripts/2-deploy-services.sh");
-    const pin = /REA_PIN=["']?([0-9a-f]{40})["']?/u.exec(deploy);
-    expect(pin?.[1]).toBe(identityCommit);
+  it("derives the exact commit pin in every deployment script from one source", () => {
     for (const relativePath of [
       "scripts/2-deploy-services.sh",
       "scripts/3-configure-services.sh",
     ]) {
       const source = readSource(relativePath);
+      expect(source).toContain("readReleasePin");
+      expect(source).not.toMatch(/REA_PIN=["']?[0-9a-f]{8}/u);
       expect(source).not.toMatch(/origin\/main/u);
       expect(source).not.toMatch(/--branch/u);
       expect(source).not.toMatch(/checkout main\b/u);
