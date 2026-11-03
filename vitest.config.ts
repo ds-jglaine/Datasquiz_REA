@@ -83,6 +83,14 @@ const PROJECT_POLICIES = {
   },
   acceptance: { pool: "forks" as const, maxWorkers: MAX_TEST_WORKERS },
   "process-global": { pool: "forks" as const, maxWorkers: MAX_TEST_WORKERS },
+  service: {
+    pool: "forks" as const,
+    maxWorkers: MAX_TEST_WORKERS,
+    // The service suite starts node and bash subprocesses that bind ephemeral
+    // loopback ports; keep the lane serial so port and temp-dir ownership is
+    // deterministic while the independent projects still run together.
+    fileParallelism: false,
+  },
   conformance: {
     pool: "threads" as const,
     maxWorkers: MAX_TEST_WORKERS,
